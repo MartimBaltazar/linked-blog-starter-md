@@ -1,0 +1,1 @@
+K8s is an open-source container orchestration platform for deploying, managing, and scaling containerized applications.
