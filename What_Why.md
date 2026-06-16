@@ -46,3 +46,6 @@ When **HPA** creates more pods than your current cluster can fit, Karpenter inst
 ### Changing/creating Namespace (new service account)
 Why what is service account
 
+
+### Helm charts and their relationships with configmaps vs dynamic values
+

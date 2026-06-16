@@ -99,3 +99,36 @@ Ensures one copy of a pod runs on every node in the cluster. Add a new node, and
 - **Karpenter:** Scales your _infrastructure_ (Nodes/Servers). When your HPA scales up and there are not enough servers to host the new pods, Karpenter steps in to instantly provision the exact size and type of cloud instance needed.
 - 
 When **HPA** creates more pods than your current cluster can fit, Karpenter instantly steps in to supply the exact machine(s) needed to run them
+
+
+### HTTPRoute
+
+HTTPRoute is part of the Kubernetes Gateway API. It defines how HTTP traffic should be routed to backend services based on conditions like hostname, path, headers, or query parameters. Think of it as a more flexible, standardized replacement for Ingress. An HTTPRoute is attached to a Gateway (the entrypoint) and specifies rules like: "route/api/* to the API service, but /static/*
+to the static content service." 
+
+It supports advanced features like weight-based traffic splitting for canary deployments, retries, and request modifications. The key difference from Ingress: HTTPRoute is explicitly bound to a Gateway resource, making it clearer how traffic flows from the edge into your cluster.
+
+### Vi-gateway
+
+A Gateway is the entry point into your cluster. It acts as a proxy that receives external traffic and routes it to services based on HTTPRoute rules. Unlike Ingress (which is more of a configuration), a Gateway is an actual load balancer or reverse proxy that you deploy. 
+
+You define a GatewayClass to specify which controller manages the Gateway (e.g., nginx, Envoy, cloud provider). Then you create a Gateway resource that listens on certain ports and protocols. HTTPRoutes attach to this Gateway and define where traffic should go. Gateways provide better separation of concerns: infrastructure teams manage the Gateway, application teams manage HTTPRoutes
+
+### Pod.namespace.svc.local to connect to service (clusterip)
+
+Pods discover services via DNS without needing to know their IP address. When a pod needs to connect to a service, it queries the cluster DNS using the service's fully qualified domain name. The pattern is:
+
+<service-name>.<namespace>.svc.cluster.local
+
+For example, a pod in the default namespace connecting to a service named api in the
+payment namespace would use api.payment.svc.cluster.local. If both are in the same namespace, you can simply use api. 
+The DNS resolver returns the stable ClusterIP of the service, and traffic is load-balanced across the backing pods. This abstracts away pod IP churn — as pods die and restart with new IPs, the DNS name stays constant.
+
+
+### How are pods named
+
+
+**`<deployment-name>-<pod-template-hash>-<random-suffix>`**
+
+
+
