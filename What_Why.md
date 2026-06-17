@@ -42,10 +42,48 @@ Scaling means adjusting the number of running pods based on demand. **HPA** and 
 - 
 When **HPA** creates more pods than your current cluster can fit, Karpenter instantly steps in to supply the exact machine(s) needed to run them
 
-
 ### Changing/creating Namespace (new service account)
-Why what is service account
 
+They don't move—they **must be recreated**. K8s resources are namespace-bound (except cluster-scoped like ClusterRoles, PV, StorageClasses).
+
+A **Service Account** is a K8s identity for pods (like a "user" for containers). They are tied to a namespace so, when you create a new namespace, you must create ServiceAccounts for that namespace. Existing SAs from other namespaces won't be available.
 
 ### Helm charts and their relationships with configmaps vs dynamic values
 
+A templated, reusable package of K8s manifests (**reusable K8s manifests with placeholders (.Values.image.tag, .Values.replicas, etc.**).
+
+**Inject config via values.yaml**. Deploy with **helm install.** Instead of creating manifests for every element in pyroscope, you simply use the helm chart.
+
+**Dynamic Values** = Helm template parameters overridden at **deploy time**. Used when deploying the chart itself (chart setup, image tags, replicas, environment). Changes require redeployment.
+
+**ConfigMaps** = K8s objects created by Helm to inject config into **pods at runtime**. When pod apps need to read config after chart is deployed. ConfigMap changes don't require Helm redeployment—app picks up changes (if watching).
+
+
+### Pod 0/1 Ready (Not CrashLoop): What It Means
+
+The container is running, but the readiness probe is failing.
+
+App isn't responding, dependencies missing, wrong endpoint or it might be simply initializing
+
+
+#### How does networking work in Kubernetes?
+
+By default, pods in a Kubernetes cluster can communicate with each other directly. Each pod receives its own IP address, and Kubernetes networking allows pods to communicate across nodes as if they were on the same network. 
+
+Pod IPs are temporary and change when a pod is recreated. To solve this, Kubernetes uses Services, which provide a stable IP address and load balance traffic across pods.
+
+Ingress sits on top of Services. It manages incoming traffic from external clients and routes requests to the correct service based on domains or URL paths, using an ingress controller to enforce these rules.
+
+#### What are ConfigMaps and Secrets?
+
+ConfigMaps and Secrets keep configuration and sensitive information out of your container images.
+
+Hardcoding values into application code creates security risks and makes the codebase harder to maintain. Kubernetes lets you inject configuration at runtime instead.
+
+A ConfigMap holds non-sensitive information like URLs, port configurations, and environment variables. A Secret is for database passwords, API keys, and tokens.
+
+#### How do you mount a secret in a pod?
+
+A Secret can be mounted as a volume or injected as an environment variable. When mounted as a volume, the application reads sensitive data from the file system.
+
+When used as an environment variable using secretKeyRef, a particular key from the secret maps to a variable in the container. This method is often used for database passwords or API tokens.
